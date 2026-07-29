@@ -1,0 +1,23 @@
+# Dependencies
+node_modules
+
+# Environment variables — never commit real secrets
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# User-uploaded avatars — now stored on Cloudinary, so nothing here
+# is meant to be tracked in git; keep the folder locally, not its contents
+uploads/*
+!uploads/.gitkeep
+
+# Editor/OS
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
