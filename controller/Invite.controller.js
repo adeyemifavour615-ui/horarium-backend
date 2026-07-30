@@ -10,7 +10,10 @@ const generateToken = (userId) => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
 };
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+// Reuses CLIENT_URL — the same env var already used for CORS in
+// server.js — so there's only one place to configure your deployed
+// frontend's URL, instead of two variables that can drift out of sync.
+const FRONTEND_URL = (process.env.CLIENT_URL || 'http://localhost:5173').split(',')[0].trim();
 
 // @route  POST /api/admin/invite
 // Admin-only. Creates (or refreshes) a pending invite for an email address
