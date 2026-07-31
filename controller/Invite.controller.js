@@ -14,7 +14,6 @@ const generateToken = (userId) => {
 // server.js — so there's only one place to configure your deployed
 // frontend's URL, instead of two variables that can drift out of sync.
 const FRONTEND_URL = (process.env.CLIENT_URL || 'http://localhost:5173').split(',')[0].trim();
-
 // @route  POST /api/admin/invite
 // Admin-only. Creates (or refreshes) a pending invite for an email address
 // and sends the invite link.
