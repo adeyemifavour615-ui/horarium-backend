@@ -49,12 +49,13 @@ export const sendWelcomeEmail = async (toEmail, fullName) => {
     </div>
   `;
 
-  await getTransporter().sendMail({
+  const info = await getTransporter().sendMail({
     from: `"Horarium" <${process.env.EMAIL_USER}>`,
     to: toEmail,
     subject: 'Welcome to Horarium 👋',
     html,
   });
+  console.log('Welcome email accepted by Gmail:', info.response, '| messageId:', info.messageId);
 };
 
 export const sendInviteEmail = async (toEmail, adminName, inviteLink) => {
@@ -82,10 +83,11 @@ export const sendInviteEmail = async (toEmail, adminName, inviteLink) => {
     </div>
   `;
 
-  await getTransporter().sendMail({
+  const info = await getTransporter().sendMail({
     from: `"Horarium" <${process.env.EMAIL_USER}>`,
     to: toEmail,
     subject: `${adminName} invited you to join their team on Horarium`,
     html,
   });
+  console.log('Invite email accepted by Gmail:', info.response, '| messageId:', info.messageId);
 };
