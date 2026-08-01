@@ -12,6 +12,11 @@ const getTransporter = () => {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
+      // Fail fast instead of hanging the request if the host's outbound
+      // connection to Gmail is slow or blocked (common on some platforms).
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
     });
   }
   return transporter;

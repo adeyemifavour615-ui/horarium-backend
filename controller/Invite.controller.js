@@ -54,7 +54,9 @@ export const createInvite = async (req, res) => {
     const admin = await UserModel.findById(req.userId);
     const inviteLink = `${FRONTEND_URL}/accept-invite?token=${token}`;
 
-    await sendInviteEmail(normalizedEmail, admin.fullName, inviteLink);
+    sendInviteEmail(normalizedEmail, admin.fullName, inviteLink).catch((error) => {
+      console.error('Invite email failed to send:', error.message);
+    });
 
     res.status(201).json({ message: 'Invite sent successfully', invite });
   } catch (error) {
