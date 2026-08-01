@@ -12,6 +12,10 @@ const getTransporter = () => {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
+      // Render's outbound networking doesn't route IPv6, but Node picks
+      // Gmail's IPv6 address first when DNS returns both — forcing IPv4
+      // avoids the resulting ENETUNREACH failures.
+      family: 4,
       // Fail fast instead of hanging the request if the host's outbound
       // connection to Gmail is slow or blocked (common on some platforms).
       connectionTimeout: 10000,
