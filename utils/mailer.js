@@ -1,30 +1,31 @@
 import nodemailer from 'nodemailer';
 
 // Built lazily on first use (not at import time) so this never runs
-// before dotenv has loaded EMAIL_USER/EMAIL_PASS into process.env.
+// before dotenv has loaded RESEND_API_KEY into process.env.
 let transporter = null;
 
 const getTransporter = () => {
   if (!transporter) {
     transporter = nodemailer.createTransport({
-      service: 'gmail',
+      // Resend's SMTP relay — reliable from cloud hosts like Render,
+      // unlike Gmail's SMTP which was unreachable (ENETUNREACH / timeout).
+      host: 'smtp.resend.com',
+      port: 465,
+      secure: true,
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: 'resend', // literally the string "resend", not your email
+        pass: process.env.RESEND_API_KEY,
       },
-      // Render's outbound networking doesn't route IPv6, but Node picks
-      // Gmail's IPv6 address first when DNS returns both — forcing IPv4
-      // avoids the resulting ENETUNREACH failures.
-      family: 4,
-      // Fail fast instead of hanging the request if the host's outbound
-      // connection to Gmail is slow or blocked (common on some platforms).
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 10000,
     });
   }
   return transporter;
 };
+
+// Until you verify your own domain on Resend, this is the only sender
+// address you can use, and mail can only be delivered to the email
+// address you signed up to Resend with. Once a domain is verified,
+// change this to something like "Horarium <notifications@yourdomain.com>".
+const FROM_ADDRESS = 'Horarium <onboarding@resend.dev>';
 
 export const sendWelcomeEmail = async (toEmail, fullName) => {
   const firstName = (fullName || '').split(' ')[0] || 'there';
@@ -54,12 +55,12 @@ export const sendWelcomeEmail = async (toEmail, fullName) => {
   `;
 
   const info = await getTransporter().sendMail({
-    from: `"Horarium" <${process.env.EMAIL_USER}>`,
+    from: FROM_ADDRESS,
     to: toEmail,
     subject: 'Welcome to Horarium 👋',
     html,
   });
-  console.log('Welcome email accepted by Gmail:', info.response, '| messageId:', info.messageId);
+  console.log('Welcome email accepted by Resend:', info.response, '| messageId:', info.messageId);
 };
 
 export const sendInviteEmail = async (toEmail, adminName, inviteLink) => {
@@ -88,10 +89,10 @@ export const sendInviteEmail = async (toEmail, adminName, inviteLink) => {
   `;
 
   const info = await getTransporter().sendMail({
-    from: `"Horarium" <${process.env.EMAIL_USER}>`,
+    from: FROM_ADDRESS,
     to: toEmail,
     subject: `${adminName} invited you to join their team on Horarium`,
     html,
   });
-  console.log('Invite email accepted by Gmail:', info.response, '| messageId:', info.messageId);
+  console.log('Invite email accepted by Resend:', info.response, '| messageId:', info.messageId);
 };
