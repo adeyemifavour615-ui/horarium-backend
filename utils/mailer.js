@@ -1,30 +1,20 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 // Built lazily on first use (not at import time) so this never runs
 // before dotenv has loaded RESEND_API_KEY into process.env.
-let transporter = null;
+let resend = null;
 
-const getTransporter = () => {
-  if (!transporter) {
-    transporter = nodemailer.createTransport({
-      // Resend's SMTP relay — reliable from cloud hosts like Render,
-      // unlike Gmail's SMTP which was unreachable (ENETUNREACH / timeout).
-      host: 'smtp.resend.com',
-      port: 465,
-      secure: true,
-      auth: {
-        user: 'resend', // literally the string "resend", not your email
-        pass: process.env.RESEND_API_KEY,
-      },
-    });
+const getResend = () => {
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY);
   }
-  return transporter;
+  return resend;
 };
 
 // Until you verify your own domain on Resend, this is the only sender
-// address you can use, and mail can only be delivered to the email
-// address you signed up to Resend with. Once a domain is verified,
-// change this to something like "Horarium <notifications@yourdomain.com>".
+// address you can use, and mail can only go to the email you signed up
+// with. Once a domain is verified, switch this to something like
+// "Horarium <notifications@yourdomain.com>".
 const FROM_ADDRESS = 'Horarium <onboarding@resend.dev>';
 
 export const sendWelcomeEmail = async (toEmail, fullName) => {
@@ -54,13 +44,17 @@ export const sendWelcomeEmail = async (toEmail, fullName) => {
     </div>
   `;
 
-  const info = await getTransporter().sendMail({
+  const { data, error } = await getResend().emails.send({
     from: FROM_ADDRESS,
     to: toEmail,
     subject: 'Welcome to Horarium 👋',
     html,
   });
-  console.log('Welcome email accepted by Resend:', info.response, '| messageId:', info.messageId);
+
+  if (error) {
+    throw new Error(error.message || 'Resend failed to send welcome email');
+  }
+  console.log('Welcome email sent via Resend, id:', data?.id);
 };
 
 export const sendInviteEmail = async (toEmail, adminName, inviteLink) => {
@@ -88,11 +82,15 @@ export const sendInviteEmail = async (toEmail, adminName, inviteLink) => {
     </div>
   `;
 
-  const info = await getTransporter().sendMail({
+  const { data, error } = await getResend().emails.send({
     from: FROM_ADDRESS,
     to: toEmail,
     subject: `${adminName} invited you to join their team on Horarium`,
     html,
   });
-  console.log('Invite email accepted by Resend:', info.response, '| messageId:', info.messageId);
+
+  if (error) {
+    throw new Error(error.message || 'Resend failed to send invite email');
+  }
+  console.log('Invite email sent via Resend, id:', data?.id);
 };
