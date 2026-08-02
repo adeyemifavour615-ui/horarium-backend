@@ -1,21 +1,35 @@
-import { Resend } from 'resend';
+import axios from 'axios';
 
-// Built lazily on first use (not at import time) so this never runs
-// before dotenv has loaded RESEND_API_KEY into process.env.
-let resend = null;
+const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
-const getResend = () => {
-  if (!resend) {
-    resend = new Resend(process.env.RESEND_API_KEY);
-  }
-  return resend;
+// Change this to the email address you verified as a Sender in Brevo's
+// dashboard (Senders, Domains & Dedicated IPs -> Senders). It does NOT
+// need to match a domain you own -- a verified personal/Gmail address works.
+const FROM_ADDRESS = {
+  name: 'Horarium',
+  email: process.env.EMAIL_USER, // must be a Brevo-verified sender
 };
 
-// Until you verify your own domain on Resend, this is the only sender
-// address you can use, and mail can only go to the email you signed up
-// with. Once a domain is verified, switch this to something like
-// "Horarium <notifications@yourdomain.com>".
-const FROM_ADDRESS = 'Horarium <onboarding@resend.dev>';
+const sendViaBrevo = async ({ to, subject, html }) => {
+  const response = await axios.post(
+    BREVO_API_URL,
+    {
+      sender: FROM_ADDRESS,
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    },
+    {
+      headers: {
+        'api-key': process.env.BREVO_API_KEY,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      timeout: 10000,
+    }
+  );
+  return response.data;
+};
 
 export const sendWelcomeEmail = async (toEmail, fullName) => {
   const firstName = (fullName || '').split(' ')[0] || 'there';
@@ -44,17 +58,12 @@ export const sendWelcomeEmail = async (toEmail, fullName) => {
     </div>
   `;
 
-  const { data, error } = await getResend().emails.send({
-    from: FROM_ADDRESS,
+  const result = await sendViaBrevo({
     to: toEmail,
     subject: 'Welcome to Horarium 👋',
     html,
   });
-
-  if (error) {
-    throw new Error(error.message || 'Resend failed to send welcome email');
-  }
-  console.log('Welcome email sent via Resend, id:', data?.id);
+  console.log('Welcome email sent via Brevo, messageId:', result.messageId);
 };
 
 export const sendInviteEmail = async (toEmail, adminName, inviteLink) => {
@@ -82,15 +91,10 @@ export const sendInviteEmail = async (toEmail, adminName, inviteLink) => {
     </div>
   `;
 
-  const { data, error } = await getResend().emails.send({
-    from: FROM_ADDRESS,
+  const result = await sendViaBrevo({
     to: toEmail,
     subject: `${adminName} invited you to join their team on Horarium`,
     html,
   });
-
-  if (error) {
-    throw new Error(error.message || 'Resend failed to send invite email');
-  }
-  console.log('Invite email sent via Resend, id:', data?.id);
+  console.log('Invite email sent via Brevo, messageId:', result.messageId);
 };
