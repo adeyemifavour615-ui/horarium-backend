@@ -11,6 +11,7 @@ import inviteRouter from './router/Invite.router.js';
 import projectRouter from './router/Project.router.js';
 import accountRouter from './router/Account.router.js';
 import notificationRouter from './router/Notification.router.js';
+import scheduleRouter from './router/Schedule.router.js';
 
 // Fixes "querySrv ECONNREFUSED" on Windows, where IPv6-first DNS
 // resolution often breaks the mongodb+srv:// SRV record lookup
@@ -43,6 +44,7 @@ app.use('/api/invite', inviteRouter);
 app.use('/api/projects', projectRouter);
 app.use('/api/account', accountRouter);
 app.use('/api/notifications', notificationRouter);
+app.use('/api/schedules', scheduleRouter);
 
 const PORT = process.env.PORT || 3000;
 

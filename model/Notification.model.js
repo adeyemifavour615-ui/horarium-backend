@@ -14,7 +14,7 @@ const NotificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['invite_accepted', 'project_created', 'general'],
+      enum: ['invite_accepted', 'project_created', 'schedule_updated', 'general'],
       default: 'general',
     },
     read: {
